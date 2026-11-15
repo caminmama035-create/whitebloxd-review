@@ -366,7 +366,7 @@ html:not(.js) .intro{display:none !important}
       <div class="rate-label" id="rateLabel">Tap a star to rate</div>
 
       <label for="name">Display name <small>(optional — blank shows “Anonymous”)</small></label>
-      <input id="name" maxlength="40" placeholder="e.g. Black Cat">
+      <input id="name" maxlength="40" placeholder="Your name or nickname">
 
       <label for="product">What did you buy?</label>
       <select id="product"></select>
@@ -416,9 +416,9 @@ html:not(.js) .intro{display:none !important}
 /* ===================== SETTINGS (edit here) ===================== */
 const CONFIG = {
   SHOP_NAME: "whitebloxd",
-  PRODUCTS: ["Product A", "Product B", "Product C", "Other"],   // choices customers can pick from
-  SUPABASE_URL: "",       // e.g. https://xxxx.supabase.co
-  SUPABASE_KEY: ""        // anon public key
+  PRODUCTS: ["Commission", "Adoptable", "Other"],   // choices customers can pick from
+  SUPABASE_URL: "https://qxvkdjonubjmhhsszzqt.supabase.co",       // e.g. https://xxxx.supabase.co
+  SUPABASE_KEY: "sb_publishable_qhsPdx1k_XwhYPtv2jBKKg_gpnvUErV"        // anon public key
 };
 /* ================================================================= */
 
@@ -447,12 +447,17 @@ function setRating(n){
 }
 
 /* data */
+function authHeaders(){
+  const h = {apikey: CONFIG.SUPABASE_KEY};
+  if(CONFIG.SUPABASE_KEY.startsWith("eyJ")) h.Authorization = "Bearer " + CONFIG.SUPABASE_KEY;
+  return h;
+}
 async function fetchReviews(){
   if(!live){
     try{ return JSON.parse(localStorage.getItem("demo_reviews")||"[]"); }catch(e){ return []; }
   }
   const r = await fetch(`${CONFIG.SUPABASE_URL}/rest/v1/reviews?select=name,product,rating,message,created_at&approved=eq.true&order=created_at.desc&limit=100`,
-    {headers:{apikey:CONFIG.SUPABASE_KEY, Authorization:"Bearer "+CONFIG.SUPABASE_KEY}});
+    {headers:authHeaders()});
   if(!r.ok) throw new Error("load");
   return r.json();
 }
@@ -465,8 +470,7 @@ async function saveReview(rv){
   }
   const r = await fetch(`${CONFIG.SUPABASE_URL}/rest/v1/reviews`,{
     method:"POST",
-    headers:{apikey:CONFIG.SUPABASE_KEY, Authorization:"Bearer "+CONFIG.SUPABASE_KEY,
-             "Content-Type":"application/json", Prefer:"return=minimal"},
+    headers:Object.assign(authHeaders(), {"Content-Type":"application/json", Prefer:"return=minimal"}),
     body:JSON.stringify(rv)
   });
   if(!r.ok) throw new Error("save");
